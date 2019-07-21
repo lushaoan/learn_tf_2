@@ -25,11 +25,13 @@ def loadDataSet(filename): #读取数据
         labelMat.append(ele[2])
     return dataMat,labelMat #返回数据特征和数据类别
 
+
 def selectJrand(i,m): #在0-m中随机选择一个不是i的整数
     j=i
     while (j==i):
         j=int(random.uniform(0,m))
     return j
+
 
 def clipAlpha(aj,H,L):  #保证a在L和H范围内（L <= a <= H）
     if aj>H:
@@ -38,12 +40,13 @@ def clipAlpha(aj,H,L):  #保证a在L和H范围内（L <= a <= H）
         aj=L
     return aj
 
+
 def kernelTrans(X, A, kTup): #核函数，输入参数,X:支持向量的特征树；A：某一行特征数据；kTup：('lin',k1)核函数的类型和参数
     m,n = shape(X)
     K = mat(zeros((m,1)))
     if kTup[0]=='lin': #线性函数
         K = X * A.T
-    elif kTup[0]=='rbf': # 径向基函数(radial bias function)
+    elif kTup[0]=='rbf': # 径向基函数(radial bias function), 其实就是高斯函数
         for j in range(m):
             deltaRow = X[j,:] - A
             K[j] = deltaRow*deltaRow.T
@@ -74,6 +77,7 @@ def calcEk(oS, k): #计算Ek（参考《统计学习方法》p127公式7.105）
     Ek = fXk - float(oS.labelMat[k])
     return Ek
 
+
 #随机选取aj，并返回其E值
 def selectJ(i, oS, Ei):
     maxK = -1
@@ -102,10 +106,13 @@ def updateEk(oS, k): #更新os数据
     Ek = calcEk(oS, k)
     oS.eCache[k] = [1,Ek]
 
+
 #首先检验ai是否满足KKT条件，如果不满足，随机选择aj进行优化，更新ai,aj,b值
 def innerL(i, oS): #输入参数i和所有参数数据
     Ei = calcEk(oS, i) #计算E值
-    if ((oS.labelMat[i]*Ei < -oS.tol) and (oS.alphas[i] < oS.C)) or ((oS.labelMat[i]*Ei > oS.tol) and (oS.alphas[i] > 0)): #检验这行数据是否符合KKT条件 参考《统计学习方法》p128公式7.111-113
+    if ((oS.labelMat[i]*Ei < -oS.tol) and (oS.alphas[i] < oS.C)) or \
+       ((oS.labelMat[i]*Ei > oS.tol) and (oS.alphas[i] > 0)): #检验这行数据是否符合KKT条件 参考《统计学习方法》p128公式7.111-113
+                                                              #不满足KKT的就会进入这里
         j,Ej = selectJ(i, oS, Ei) #随机选取aj，并返回其E值
         alphaIold = oS.alphas[i].copy()
         alphaJold = oS.alphas[j].copy()
@@ -145,7 +152,10 @@ def innerL(i, oS): #输入参数i和所有参数数据
 
 
 #SMO函数，用于快速求解出alpha
-def smoP(dataMatIn, classLabels, C, toler, maxIter,kTup=('lin', 0)): #输入参数：数据特征，数据类别，参数C，阀值toler，最大迭代次数，核函数（默认线性核）
+def smoP(dataMatIn, classLabels, C, toler, maxIter,kTup=('lin', 0)):
+    #输入参数：数据特征，数据类别，参数C，阀值toler，最大迭代次数，核函数（默认线性核）
+    # toler: P129 检验范围
+    # C ： P109 惩罚参数
     oS = optStruct(mat(dataMatIn),mat(classLabels).transpose(),C,toler, kTup)
     iter = 0
     entireSet = True
@@ -169,6 +179,7 @@ def smoP(dataMatIn, classLabels, C, toler, maxIter,kTup=('lin', 0)): #输入参�
             entireSet = True
         print("iteration number: %d" % iter)
     return oS.b,oS.alphas
+
 
 def testRbf(data_train,data_test):
     dataArr,labelArr = loadDataSet(data_train) #读取训练数据
@@ -199,11 +210,13 @@ def testRbf(data_train,data_test):
             errorCount_test += 1
     print("the test error rate is: %f" % (float(errorCount_test)/m))
 
+
 #主程序
 def main():
     filename_traindata='train_data.txt'
     filename_testdata='test_data.txt'
     testRbf(filename_traindata,filename_testdata)
+
 
 if __name__=='__main__':
     main()
